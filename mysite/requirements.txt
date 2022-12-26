@@ -1,10 +1,11 @@
-django
+django==4.0.1
 exif
 Pillow
 geopy
 gunicorn
 psycopg2
-tensorflow
+tensorflow-cpu
 keras
 opencv-python
 pytz
+pillow_heif

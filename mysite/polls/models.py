@@ -5,6 +5,7 @@ from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.models import User
 from PIL import Image as PilImage
+from pillow_heif import register_heif_opener
 from django.utils import timezone
 
 image_storage = FileSystemStorage(
@@ -79,7 +80,14 @@ class Profile(models.Model):
         """Overwrite the profile image and resize it"""
         super(Profile, self).save(*args, **kwargs)
 
+        register_heif_opener()
         img = PilImage.open(self.img.path)  # Open image
+        if str(self.img.path).lower().endswith('.heic'):
+
+            img = PilImage.open(img.data)
+            img = img.convert('RGB')
+            exif = img.getexif()
+            img.save(self.img.path, format='JPEG', quality=95, exif=exif)
 
         # resize image
         if img.height > 300 or img.width > 300:

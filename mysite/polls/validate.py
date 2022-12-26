@@ -3,6 +3,8 @@ import os
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from exif import Image
+from PIL import Image as PilImage
+from pillow_heif import register_heif_opener
 
 
 def check_user_unique(username):
@@ -39,8 +41,11 @@ def validate_upper_lower(password):
 
 def check_image_type(image):
     """This function is used to check if the image both an image and a jpg file."""
-    if not image.name.endswith(".jpg"):
-        raise ValidationError("The photo must use the jpg format.", code='invalid_type')
+    if not image.name.endswith(".jpg") :
+        if image.name.lower().endswith(".heic"):
+            pass
+        else:
+            raise ValidationError("The photo must use the jpg or heic format.", code='invalid_type')
 
 
 def validate_image_size(fname):

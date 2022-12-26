@@ -3,13 +3,18 @@ import datetime
 import operator
 import random
 import pytz
+import io
+import sys
 from pathlib import Path
+from PIL import Image as PilImage
+from pillow_heif import register_heif_opener
 
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils import timezone
 
 from .ml_ai_image_classification import ai_classify_image, ai_face_recognition
@@ -35,10 +40,11 @@ def is_photo_valid_for_challenge(request, gps, date_taken, challenge, img_path):
     elif challenge.subject == '' or challenge.subject == None or challenge.subject == 'test':
         # if there is no subject it cannot be analysed by the ai
         pass
+    #challenge subject = wildlife
     else:
         #img_path = Path('..'+img_path.url)
         if ai_classify_image(img_path, challenge.subject) == False:
-            messages.info(request, 'AI could not find a ' + str(challenge.subject))
+            messages.info(request, 'AI could not find: ' + str(challenge.subject))
             return False
 
     if get_distance((challenge.location), gps) <= challenge.locationRadius:
@@ -83,6 +89,10 @@ def invalid_image_size_popup(request, size_status):
     """If the size status is below 20mb , a popup will display the error."""
     if size_status == "invalid":
         messages.info(request, 'Photo must be less than 20mb')
+
+def invalid_heic_image(request):
+    """If a heic photo cannot be converted, display that it is incompatible"""
+    messages.info(request, 'Photo could not be read correctly. If in .HEIC format, please convert it to .jpg')
 
 
 def check_badge(user):
@@ -213,12 +223,38 @@ def upload_image(request):
     if request.method == "POST":
 
         form = ImagefieldForm(request.POST, request.FILES)
+        img = form["image"]
+        print(img.data)
+        print("hello")
         # Sanitize inputs
 
-        if form.is_valid():
+        if form.is_valid() or str(img.data).lower().endswith(".heic"):
+
             challenge = form.cleaned_data["challenge"]
             desc = form.cleaned_data["description"]
-            img = form.cleaned_data["image"]
+
+            if not str(img.data).lower().endswith("heic"):
+                img = form.cleaned_data["image"]
+            else:
+                try:
+                    register_heif_opener()
+                    img = PilImage.open(img.data)
+                    img = img.convert('RGB')
+                    #img = img.resize(PilImage.ANTIALIAS)
+                    #exif = img.info['exif']
+                    exif = img.getexif()
+                    output = io.BytesIO()
+                    img.save(output, format='JPEG', quality=95, exif=exif)
+                    output.seek(0)
+                    img= InMemoryUploadedFile(output, 'ImageField',
+                                        'heicimage',
+                                        'image/jpeg',
+                                        sys.getsizeof(output), None)
+                except:
+                    context['form'] = form
+                    invalid_heic_image(request)  # message tells user of size error
+                    return render(request, "uploadfile.html", context)  # refresh page
+
             # Create the table object
             obj = Image(
                 challenge=challenge,

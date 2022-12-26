@@ -59,6 +59,18 @@ def ai_classify_image(img_path, subject):
 		subjects.append('cat')
 		subjects.append('fox')
 		subjects.append('rabbit')
+		subjects.append('pond')
+		subjects.append('park')
+		subjects.append('plant')
+		subjects.append('swan')
+		subjects.append('animal')
+		subjects.append('tiger')
+		subjects.append('lion')
+		subjects.append('river')
+		subjects.append('cat')
+		subjects.append('dog')
+		subjects.append('sun')
+		subjects.append('moon')
 
 	# see if the subject is one of the features that has been classified
 	for subject in subjects:

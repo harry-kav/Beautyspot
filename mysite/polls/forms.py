@@ -3,6 +3,7 @@ from django import forms
 from django.forms import ModelChoiceField
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
+from django.core.validators import FileExtensionValidator
 
 from .validate import check_user_unique, validate_upper_lower, \
     validate_special, validate_number, check_image_type
@@ -10,12 +11,20 @@ from .validate import check_user_unique, validate_upper_lower, \
 from .models import Profile, Challenge
 
 
+image_validator = FileExtensionValidator(
+    allowed_extensions=['jpg','heic'],
+    message='File extension not allowed. Allowed extensions include  .jpg,.heic'
+)
+
+class ModifiedImageField(forms.ImageField):
+    default_validators = [image_validator]
+
 class ImagefieldForm(forms.Form):
     """The form used to upload a new image."""
     challenge = forms.ModelChoiceField(queryset=Challenge.objects.filter(active=True), initial=0)
     description = forms.CharField(widget=forms.Textarea(attrs={'style': "width:95vw;"}),
                                   max_length=200)
-    image = forms.ImageField(validators=[check_image_type])
+    image = ModifiedImageField(validators=[check_image_type])
 
 
 class SignupForm(forms.Form):
