@@ -40,19 +40,21 @@ Requirements
 Python 3.9.0 or later  
 
 django library:  
-	pip install django  
+	pip install django==4.0.1    
 exif library:  
 	pip install exif  
 geopy library:  
 	pip install geopy  
 tensorflow library:  
-	pip install tensorflow  
+	pip install tensorflow-cpu    
 keras library:  
 	pip install keras  
 opencv library:  
 	pip install opencv-python  
 pytz library:  
 	pip install pytz  
+pillow-heif library:  
+	pip install pillow-heif
   
 If you wish to host a dedicated server to run the web-app off of, you will also need a hosting service e.g. Google Cloud SDK, Digital Ocean  
 
